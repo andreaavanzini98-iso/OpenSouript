@@ -1,0 +1,263 @@
+#/bin/bash			
+#v.beta.2209.0
+
+
+#installer (togliere # nella riga successiva per usare l'installer)
+#if [[ $(whoami) = "root" && $1 = "installa" ]]; then mkdir /home/AVP /home/AVP/Gestore-permessi; cp gestore-permessi.sh /home/AVP/Gestore-permessi; link /home/AVP/Gestore-permessi/gestore-permessi.sh /bin/gestore-permessi; else echo ""; fi
+
+#update (togliere # nella riga sucessiava per usare l'udate)
+if [[ $(whoami) = "root" && $1 = "update" && $(cat /home/AVP/Gestore-permessi/gestore-permessi.sh | head -2 | tail -1) != $(cat gestore-permessi.sh | head -2 | tail -1) ]]; then cp gestore-permessi.sh /home/AVP/Gestore-permessi/; else echo ""; fi
+
+
+
+
+
+
+
+
+
+
+#
+test () { read ok; }
+conferma () { conferma=""; read conferma; }
+selezione () { selezione=""; read selezione; }
+list-g-id () { echo -e "\n"; cat /etc/group | awk -F: '{$2=":" ; $3=$3":" ; print $0}' | tr -d " " | paste - - - - - -d"\t" | column -t; echo -e "\n"; }
+list-g-n () { echo -e "\n"; cat /etc/group | awk -F: '{print $1}' | paste - - - - - -d"\t" | column -t; echo -e "\n"; }
+list-u-id () { echo -e "\n"; cat /etc/passwd | awk -F: '{$2=$5=$6=$7=""; $1=$1"|"; $4=$4"|" ; $3=$3"|" ; print $0}' | tr -d " " | paste - - - - - -d"\t" | column -t; echo -e "\n"; }
+list-u-n () { echo -e "\n"; cat /etc/passwd | awk -F: '{print $1}' | paste - - - - - -d"\t" | column -t; echo -e "\n"; }
+list-f () { ls -l | tail -$(echo $(ls -l | wc -l) - 1 | bc); echo -e "\n"; }
+comandi () { if [[ $(echo $comando) = "naviga" ]]; then echo -e "|usare sintassi cd /path\n|corrente: $(pwd)\n"; opzione=""; read opzione; $(echo $opzione); else echo ""; fi; }
+
+#controllo input corretto
+if [[ $(whoami) = "root" && $1 = "avvia" ]]
+ then
+  clear
+  dirAtt=$(pwd)
+  echo -e "||Ciao\n||Questo è un programma per facilitare la gestione dei permessi e delle utenze\n||buon lavoro\n\n||>invio< per continuare" ; read invio
+  while true
+	do
+	 clear
+	 echo "|Selezionare:"
+	 echo -e "|>permessi< per gestire i permessi dei file/directory\n|>utenti< per gestire gli utenti\n|>gruppi< per gestire i gruppi\n|>info-utenti< per visualizzare utenti disponibili\n|>gestione-utenti< per gestire gli utenti\n|>gestione-gruppi< per gestire i gruppi\n|>esci< per uscire\n"
+	 read alpha
+	 case $alpha in 
+	 	permessi) 
+		 while true 
+		   do	
+		     clear
+	             if [[ $(echo $PERMESSI | tail -1) = "" ]]; then echo ""; else echo "|vuoi visualizzare la leggenda dei permessi numerici?si/no"; read risposta; if [[ $(echo $risposta) = "si" ]]; then echo $PERMESSI; else echo ""; fi; fi
+		     pwd
+		     list-f
+		     echo -e "\n|slezionare permesso e file da modificare(es:u+w file.txt)\n|>ciclo< per automatizzare i processi\n|>esci< per uscire\n|>permeessi-numerici< per visualizzare tutte le combinazioni di permessi (richiede tempo la prima volta)\n|>naviga< per cambiare cartella"
+		     echo -e "\n###permessi\n|ugo+-rwx\n|u+s :esegui un file come utente proprietario\n|g+s su file: esegui un file come gruppo principale\n|    su directory: ogni file all'interno della cartella avra gruppo principale quello della cartella"
+		     echo -e "|o+t :i file possono essere rimossi solo da utenti proprietari\n|puoi usare anche il metodo numerico (000 :elimina tutti i permessi - 777 :dai tutti i permessi\n###\n"
+		     selezione
+			if [[ $(echo $selezione) = "esci" ]]
+			 then
+			 	break
+			elif [[ $(echo $selezione) = "naviga" ]]; then comando=$(echo $selezione); comandi;
+
+			else
+				case $selezione in
+					permessi-numerici) if [[ $(echo $PERMESSI | tail -1) = "" ]]; then touch permessi.txt; PERMESSI=""; for i in {0..7}{0..7}{0..7}; do chmod $i permessi.txt; PERMESSI=$(echo $PERMESSI $(echo -n -e "$i $(ls -l permessi.txt | awk '{print $1}')\t")); done; rm permessi.txt; else echo $PERMESSI; fi; echo "|invio per continuare"; read nulla;;
+					ciclo) 	echo -e "|selezionare permesso da aggiungere es: u+w o 412\n|>selezione-singola< per selezionare un permesso alla volta"
+							selezione
+							if [[ $(echo $selezione) = "selezione-singola" ]]; then for i in $(ls); do clear; list-f; ls -ld $i; echo "selezionare permesso"; selezione; chmod $(echo $selezione ) $(echo $i); done; continue; else echo ""; fi
+							echo -e "|Digita >TUTTI< per applicare a tutti i file\noppure invio per selezionare un file alla volta\n"
+							conferma
+							   if [[ $(echo $conferma) = "TUTTI" ]]
+							     then
+								for i in $(ls); do chmod $(echo $selezione ) $(echo $i); done
+							   else
+					 			for i in $(ls); do clear; list-f ; ls -ld $i; echo -e "|>s< per modificare i permessi\n|>n< per passare al successivo"; conferma; if [[ $(echo $conferma) = "s" ]]; then chmod $(echo $selezione) $(echo $i); else echo ""; fi; done
+							   fi;;
+					*)chmod $(echo $selezione);;
+				esac
+			fi
+		  done;;
+		
+		utenti) 
+		  while true 
+		    do	
+			clear
+			list-f; echo -e "\nUTENTE"; list-u-n
+			echo -e "\n|>esci< per tornare indietro\n|slezionare >utente< da modificare e >file<\n|usare >ciclo< per eseguire un ciclo sui file"
+			selezione
+			if [[ $(echo $selezione) = "esci" ]]
+				then
+					break
+			elif [[ $(echo $selezione) = "naviga" ]]; then comando=$(echo $selezione); comandi;
+			else
+				case $selezione in
+					ciclo) 	echo -e "|Utente da modificare es: mario (se si vuole passare da utente a mario)\n|>selezione-signola< per selezionare un utente alla volta\n"
+							selezione
+							if [[ $(echo $selezione) = "selezione-singola" ]]; then for i in $(ls); do clear; list-f; list-u-n; ls -ld $i; echo "selezionare utente"; selezione; chown $(echo $selezione ) $(echo $i); done; continue; else echo ""; fi
+							echo -e "|Digita >TUTTI< per applicare a tutti i file\n|invio per continuare\n"
+							conferma
+							   if [[ $(echo $conferma) = "TUTTI" ]]
+							     then
+								for i in $(ls); do chown $(echo $selezione) $(echo $i); done
+							   else
+					 			for i in $(ls)
+					 			 do
+								 	clear; list-f ; ls -ld $i; echo -e "|>s< per modificare i permessi\n|>n< per passare al successivo"
+									conferma
+										if [[ $(echo $conferma) = "s" ]]; then chown $(echo $selezione) $(echo $i); else echo ""; fi
+							 	 done
+							   fi;;
+					*)chown $(echo $selezione);;
+				esac
+
+			fi
+
+		     done;;
+
+		gruppi) 
+		 while true 
+		   do	
+		     clear; list-f
+		     list-g-n
+		     echo -e "\n\n|Digita >gruppo file< per modificare (es: >gruppo1 testo.txt< per modificare gruppox in gruppo1 del file testo.txt\n|usare >ciclo< per eseguire un ciclo sui file\n|>esci< per uscire\n"
+		     selezione
+			if [[ $(echo $selezione) = "esci" ]]
+			 then
+			 	break
+			elif [[ $(echo $selezione) = "naviga" ]]; then comando=$(echo $selezione); comandi;
+			else
+				case $selezione in
+					ciclo) 	echo -e "|selezionare >gruppo< da modificare es: gruppo1\n|>selezione-singola< per selezionare un gruppo alla volta"
+							selezione
+							if [[ $(echo $selezione) = "selezione-singola" ]]; then for i in $(ls); do clear; list-f; list-g-n; ls -ld $i; echo "selezionare gruppo"; selezione; chown :$(echo $selezione ) $(echo $i); done; continue; else echo ""; fi
+							echo -e "|Digita >TUTTI< per applicare a tutti i file, oppure ignora"
+							conferma
+							   if [[ $(echo $conferma) = "TUTTI" ]]
+							     then
+								for i in $(ls); do chown :$(echo $selezione) $(echo $i); done
+							   else
+					 			for i in $(ls)
+					 			 do
+								 	clear; list-f ; ls -ld $i; echo -e "|>s< per modificare i permessi\n|>n< per passare al successivo"
+									conferma
+										if [[ $(echo $conferma) = "s" ]]; then chown :$(echo $selezione) $(echo $i); else echo ""; fi
+							         done
+							   fi;;
+					*)chown :$(echo $selezione);;
+				esac
+			fi
+		  done;;
+		
+		info-utenti)
+			while true
+			do
+			echo -e "UTENTE|ID UTENTE|ID GRUPPO"; list-u-id
+			echo -e "digita:\n|>esci< per uscire\n|>nome utente< per informazioni\n|>id-utente< per modificare id utente\n|>id-gruppo< per modificare id gruppo\n|>gruppo-s< per aggiungere gruppi secondari"
+				selezione
+				case $selezione in
+					esci)
+						break;;
+					id-utente)
+					   while true 
+					     do
+						clear
+						list-u-id ; echo -e "|>utente<\n|>nuovo-id<\n|>esci< per annullare\n"
+						selezione
+						case $selezione in
+						 	esci) clear; break;;
+						esac
+						usermod -u $(echo $( read nuovo ;echo $nuovo)) $(echo $selezione)
+					     done;;	
+					id-gruppo) 
+					   while true
+					      do
+						clear; echo "|gruppi disponibili"
+						list-g-id
+						echo -e "|utenti|\n"; list-u-id
+						echo -e "|inserie >utente<\n|>nuovo gruppo primario<\n|>esci< per uscire"
+						selezione
+						case $selezione in
+							esci) clear; break;;
+						esac
+						usermod -g $(echo $(read nuovo ;echo $nuovo)) $(echo $selezione)
+					      done;;
+					gruppo-s) 
+					   while true
+					     do
+#						test
+						clear
+						echo "|gruppi disponibili|"
+						list-g-id
+						echo -e "|>gruppo< gruppo secondario al quale aggiungere l'utente\n|>utente< utente da aggiundere\n|>esci< per uscire\n|usare prima >elimina< per eliminare un utente da un gruppo"
+						selezione
+						case $selezione in
+							esci) clear; break;;
+							elimina) echo -e "\n|per eliminare un gruppo è necessario inserire la password e premere invio due volte\n|se non si conosce la password usare >esci<\n" 
+								selezione
+								case $selezione in
+									esci) clear; continue;;
+								esac
+								groupmems -d $(echo $(read gruppo ; echo $gruppo)) -g $(echo $selezione); continue;;
+						esac
+						usermod -aG $(echo $selezione) $(echo $(read utente ; echo $utente))
+					    done;;
+					*) clear; echo -e "|Informazioni su $selezione\n" ;id $selezione; echo -e "\n";;
+				esac
+			    done;;
+		gestione-utenti) while true
+				  do
+				   clear
+				   echo -e "\n|utenti|"; list-u-id; list-g-id
+				   echo -e "\n|>aggiungi< per aggiungere un utente\n|>elimina< per eliminare un utente\n|>esci< per uscire"
+				   selezione
+				   case $selezione in
+					aggiungi) 
+						  echo -e "|>esci< per uscire\n|invio per iniziare\n"
+						  selezione ; if [[ $(echo $selezione) = "esci" ]]; then continue; else echo "" ; fi
+						  echo -e "\n|iserisci i dati richiesti o lascia vuoto per saltare"
+					  	  echo -n "|nome: "; read nome; echo -n "|home: "; read home1; echo -n "|gruppo primario: "; read grpp
+						  PATTERN1=""; PATTERN1="$(if [[ $(echo $home1) != "" ]]; then echo "-m -d $home1" ; else echo ""; fi) $(if [[ $(echo $grpp) != "" ]]; then echo "-g $grpp" ; else echo ""; fi)"
+						  useradd $(echo $PATTERN1) $(echo $nome);;
+					elimina) 
+						  echo -e "|>esci< per uscire\n|invio per iniziare\n"
+						  selezione ; if [[ $(echo $selezione) = "esci" ]]; then continue; else echo "" ; fi
+					  	  echo -e "\n|iserisci i dati richiesti\n"
+					  	  echo -n "|nome: "; read nome
+						  userdel $nome;;
+					esci) break;;
+				 esac
+				 done;;
+		gestione-gruppi) while true; do
+				   clear
+				   list-g-id
+				   echo -e "|>aggiungi< per aggiungere un gruppo\n|>elimina< per eliminare un gruppo\n|>esci< per uscire"
+				   selezione
+				   case $selezione in
+					aggiungi) 
+						  echo -e "|>esci< per uscire\n|invio per iniziare\n"
+						  selezione ; if [[ $(echo $selezione) = "esci" ]]; then continue; else echo "" ; fi
+						  echo -e "\n|iserisci i dati richiesti o lascia vuoto per saltare\n\n"
+					  	  echo -n "|nome: "; read nome; echo -n "|ID (1000-60000): "; read idgr;
+						  PATTERN1=""; PATTERN1="$(if [[ $(echo $idgr) != "" ]]; then echo "-g $idgr" ; else echo ""; fi)"
+						  groupadd $(echo $PATTERN1) $(echo $nome);;
+					elimina) 
+						  echo -e "|>esci< per uscire\n|invio per iniziare\n"
+						  selezione ; if [[ $(echo $selezione) = "esci" ]]; then continue; else echo "" ; fi
+					  	  echo -e "\n|iserisci i dati richiesti\n"
+					  	  echo -n "|nome: "; read nome
+						  groupdel $nome;;
+					esci) break;;
+				 esac
+				 done;;
+	
+		esci) 
+			break;;
+
+		esac
+			done
+		cd $(echo $dirAtt)
+else
+		echo -e "||Help\n||avvia per avviare il programma\n||aggiorna(commentato) per verificare gli aggiornamenti\n||installa(commentato) per installare il programma"
+fi
+
+
+
+
