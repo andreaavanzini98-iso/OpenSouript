@@ -1,0 +1,269 @@
+#ifndef persone
+#define persone
+
+#include <iostream>
+#include <string>
+#include <fstream>
+using namespace std;
+
+
+
+class persona {
+    public:
+        persona() : m_nome("nome"), m_cognome("cognome"), m_nascita("00/00/00") {;}
+        persona(string nome, string cognome, string nascita) 
+            : m_nome(nome), m_cognome(cognome), m_nascita(nascita) {;}
+        string nome() {return m_nome;}
+        string cognome() {return m_cognome;}
+        persona operator=(persona &p) {
+                    string s_nome = p.m_nome;
+                    string s_cognome = p.m_cognome;
+                    string s_nascita = p.m_nascita;
+                    persona s(s_nome,s_cognome,s_nascita);
+                return s;
+                }
+        virtual void grado(){
+                cout << "Persona" << endl;
+            }
+        virtual void info() {
+                    cout << "Informazioni base: " << endl 
+                         << "Grado: Persona"<< endl 
+                         << "NOME: " << m_nome << endl 
+                         << "COGNOME: " << m_cognome << endl
+                         << "DATA DI NASCITA: " << m_nascita << endl << endl; 
+        }
+
+    
+    protected:
+        string m_nome;
+        string m_cognome;
+        string m_nascita;
+
+    friend std::istream &operator>>(std::istream &in, persona& c) {
+                    cout << "Iserire dati:\n" << "Nome: "; 
+                    in >> c.m_nome;
+                    cout << "Cognome: ";
+                    in >> c.m_cognome;
+                    cout << "Data di nascita: ";
+                    in >> c.m_nascita;
+                    
+                    return in;
+                }
+};
+
+class dipendente : public persona {
+    public:
+        dipendente() : m_assunzione("assunzione"), m_stipendio(0) {;}
+        dipendente(string nome, string cognome, string nascita, string assunzione, double stipendio) 
+            : persona(nome,cognome,nascita), m_assunzione(assunzione), m_stipendio(stipendio) {;}
+        string assunzione() {return m_assunzione;}
+        double stipendio() {return m_stipendio;}
+        persona operator=(dipendente &p) {
+                    string s_nome = p.m_nome;
+                    string s_cognome = p.m_cognome;
+                    string s_nascita = p.m_nascita;
+                    string s_assunzione = p.m_assunzione;
+                    double s_stipendio = p.m_stipendio;
+                    dipendente s(s_nome,s_cognome,s_nascita,s_assunzione,s_stipendio);
+                return s;
+            }
+        virtual void grado(){
+                cout << "Dipendente" << endl;
+            }
+        virtual void info() {
+                cout << "Informazioni base: " << endl 
+                     << "Grado: Dipendente"<< endl 
+                     << "NOME: " << m_nome << endl 
+                     << "COGNOME: " << m_cognome << endl
+                     << "DATA DI NASCITA: " << m_nascita << endl << endl; 
+            }
+        
+    
+    protected:
+        string m_assunzione;
+        double m_stipendio;
+    friend std::istream &operator>>(std::istream &in, dipendente& c) {
+                    cout << "Iserire dati:\n" << "Nome: "; 
+                    in >> c.m_nome;
+                    cout << "Cognome: ";
+                    in >> c.m_cognome;
+                    cout << "Data di nascita: ";
+                    in >> c.m_nascita;
+                    cout << "Data di assunzione: ";
+                    in >> c.m_assunzione;
+                    cout << "Stipendio Lordo: ";
+                    in >> c.m_stipendio;
+                    
+                    return in;
+                }
+};
+
+class dirigente : public dipendente {
+    public:
+        dirigente() : m_livello("livello"), m_campo("campo") {;}
+        dirigente(string nome, string cognome, string nascita, string assunzione, double stipendio, string livello, string campo) 
+            : dipendente(nome, cognome, nascita, assunzione, stipendio), m_livello(livello) , m_campo(campo) {;}
+        string livello() {return m_livello;}
+        string campo() {return m_campo;}
+        persona operator=(dirigente &p) {
+                    string s_nome = p.m_nome;
+                    string s_cognome = p.m_cognome;
+                    string s_nascita = p.m_nascita;
+                    string s_assunzione = p.m_assunzione;
+                    double s_stipendio = p.m_stipendio;
+                    string s_livello = p.m_livello;
+                    string s_campo = p.m_campo;
+                    dirigente s(s_nome,s_cognome,s_nascita,s_assunzione,s_stipendio,s_livello,s_campo);
+                return s;
+            }
+        virtual void grado(){
+                cout << "Dirigente" << endl;
+            }
+        virtual void info() {
+                cout << "Informazioni base: " << endl
+                     << "Grado: Persona"<< endl
+                     << "NOME: " << m_nome << endl 
+                     << "COGNOME: " << m_cognome << endl
+                     << "DATA DI NASCITA: " << m_nascita << endl << endl; 
+            }
+
+    protected:
+        string m_livello;
+        string m_campo;
+    friend std::istream &operator>>(std::istream &in, dirigente& c) {
+                    cout << "Iserire dati:\n" << "Nome: "; 
+                    in >> c.m_nome;
+                    cout << "Cognome: ";
+                    in >> c.m_cognome;
+                    cout << "Data di nascita: ";
+                    in >> c.m_nascita;
+                    cout << "Data di assunzione: ";
+                    in >> c.m_assunzione;
+                    cout << "Stipendio Lordo(.): ";
+                    in >> c.m_stipendio;
+                    cout << "Livello: ";
+                    in >> c.m_livello;
+                    cout << "Campo: ";
+                    in >> c.m_campo;
+                    
+                    return in;
+                }
+};
+
+std::ostream &operator<<(std::ostream &stream, persona& c)
+{
+    stream << "Dati di\n" << c.nome() << " " << c.cognome() << endl;
+    return stream;
+}
+
+std::ostream &operator<<(std::ostream &stream, dipendente& c)
+{
+    stream << "Dati di\n" << c.nome() << " " << c.cognome() << endl 
+           << "Data assunzione: " << c.assunzione() << endl     
+           << "Stipendio: " << c.stipendio() << endl;
+    return stream;
+}
+
+std::ostream &operator<<(std::ostream &stream, dirigente& c)
+{
+    stream << "Dati di\n" << c.nome() << " " << c.cognome() << endl 
+           << "Data assunzione: " << c.assunzione() << endl 
+           << "Stipendio: " << c.stipendio() << endl 
+           << "Livello: "<< c.livello() << endl 
+           << "Campo: " << c.campo() << endl;
+    return stream;
+}
+
+int scelta(string spiegazione, string alpha, string bravo, string charlie, string exit) {
+    cout << endl << spiegazione << "\n"
+         << "1- " << alpha << "\n"
+         << "2- " << bravo << "\n"
+         << "3- " << charlie << "\n"
+         << "4- " << exit << "\n"
+         << "DIGITA QUI: ";
+    int scelta = 0;
+    cin >> scelta;
+    return scelta;
+}
+
+int scelta(string spiegazione, string alpha, string bravo, string exit) {
+    cout << endl << spiegazione << "\n"
+         << "1- " << alpha << "\n"
+         << "2- " << bravo << "\n"
+         << "3- " << exit << "\n"
+         << "DIGITA QUI: ";
+    int scelta = 0;
+    cin >> scelta;
+    return scelta;
+}
+
+int scelta(string spiegazione) {
+    cout << endl << spiegazione << "\n"
+         << "DIGITA QUI: ";
+    int scelta = 0;
+    cin >> scelta;
+    return scelta;
+}
+
+template <typename all>
+void lista(all utente){
+    all *info;
+    info = &utente;
+    info->info();
+}
+
+template <typename all>
+void grado(all utente) {
+    all *grd;
+    grd = &utente;
+    grd->grado();
+}
+
+template <typename all>
+void setnew(all utente){
+    ofstream out("AvanzoTeamRunning.txt");
+    out << utente;
+    out.close();
+}
+
+void savefile() {
+    system("cat AvanzoTeamRunning.txt >> AvanzoTeam.txt");
+    system("cat AvanzoTeam.txt >> Personale.txt");
+}
+
+void search() {
+    string cognome, nome, visualizza, *checkN, *checkC;
+    cout << "Nome :";
+    cin >> nome;
+    cout << "Cognome :";
+    cin >> cognome;
+    ifstream in("Personale.txt");
+    while(!in.eof()) {
+        in >> visualizza;
+        if(visualizza == nome) {
+            checkN = &visualizza;
+            while(!in.eof()) {
+                in >> visualizza;
+                if(visualizza == cognome) {
+                    checkC = &visualizza;
+                }
+            }
+        }
+    }
+    if(*checkN == nome && *checkC == cognome)  
+        cout << " " << nome << " " << cognome << " presente nel sistema\n";
+    else
+        cout << " " << nome << " " << cognome << " non presente nel sistema\n";
+        
+}
+
+void test() {cout << "ok";}
+
+void destroy() {
+    cout << "sei sicuro?\n y or n\n";
+    string choose;
+    cin >> choose;
+    if(choose=="y") system("rm Personale.txt");
+    else cout << "annullato\n";
+}
+#endif
