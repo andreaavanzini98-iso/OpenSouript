@@ -1,0 +1,110 @@
+#include <sys/socket.h>
+#include <arpa/inet.h> 
+#include <unistd.h>    
+#include <iostream>
+#include <stdlib.h>
+#include <string>
+
+#define SIZE 2000
+
+// Classe che descrive un semplice server di rete, che crea un socket,
+// lo associa ad una porta e attende che i clienti si connettano e
+// inviino messaggi ai quali risponde
+class server
+{
+  public:
+    // Costruttore
+    server()
+    {
+	int c;
+	std::cout << "Sono in ascolto alla porta: " << std::endl;
+	std::cin >> c;
+      m_port = c;
+    }
+
+    // Metodo per configurare il socket; ritorna false in caso di errore
+    bool configure()
+    {
+      // Creazione del socket
+      m_socket_desc = socket(AF_INET , SOCK_STREAM , 0);
+      if (m_socket_desc == -1)
+        return false;
+      
+      // Associazione di un socket ad una porta
+      m_server.sin_family      = AF_INET;
+      m_server.sin_addr.s_addr = INADDR_ANY;
+      m_server.sin_port        = htons( m_port );
+      if( bind(m_socket_desc,(struct sockaddr *)&m_server , sizeof(m_server)) < 0)
+        return false;
+     
+      return true;
+    }
+    
+    // Metodo che attiva il server. Riceve messaggi e risponde
+    // Ritorna false in caso di errore 
+    bool execute()
+    {
+      // Attiva l'ascolto sulla porta
+      listen(m_socket_desc , 3);
+
+      // Accetta l'eventuale connessione da parte di un client
+      int c = sizeof(struct sockaddr_in);
+      int client_sock = accept(m_socket_desc, (struct sockaddr *)&m_client, (socklen_t*)&c);
+      if (client_sock < 0)
+        return false;
+      std::cout << "Connection accepted" << std::endl;
+     
+      // Loop di ricezione messaggi dal cliente e successiva risposta
+      // Si esce dal loop solo in caso di errore o disconnessione
+      int read_size;              // Contatore del numero di byte ricevuti
+      char message_buffer[SIZE];  // Buffer in cui ospitare il messaggio
+      while( (read_size = recv(client_sock , message_buffer, SIZE , 0)) > 0 )
+      {
+        std::string question(message_buffer, 0, read_size); // Metto la domanda in una std::string
+        std::string answer("echo > ");        // Crea una string contenente il preambolo 
+        answer.append(question);              // Appende il messaggio ricevuto dal client
+ 	if(question=="voto")
+        	write(client_sock , "30" , answer.size()); 
+        // Invio risposta
+        write(client_sock , answer.c_str() , answer.size()); 
+      }
+     
+      // Uscita
+      if(read_size == 0)
+        std::cout << "Client disconnected" << std::endl;
+      else if(read_size == -1)
+        return false;
+      
+      return true;
+    }  
+
+  private:
+    int                m_socket_desc;  // Numero identificativo del socket
+    int                m_port;         // Porta di rete
+    struct sockaddr_in m_server;       // Oggetto socket address che descive il server 
+    struct sockaddr_in m_client;       // Oggetto socket address che descive il client
+};
+
+
+
+int main(int argc , char *argv[])
+{
+  // Creazione dell'oggetto server
+  server s;
+ 
+  // Configurazione dell'oggetto
+  if( s.configure() )
+    std::cout << "Waiting for incoming connections.." << std::endl;
+  else
+  { 
+    std::cerr << "Configuration ERROR. Porta probabilmente già in uso,  " << std::endl;
+    std::cerr << "riprova tra 2 min, se non funziona ancora cambia porta" << std::endl;
+    exit(2);
+  }
+
+  // Attivazione del server
+  s.execute();
+
+  // The end
+  return 0;
+}
