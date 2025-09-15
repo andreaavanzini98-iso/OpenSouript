@@ -1,0 +1,16 @@
+BASE=`ifconfig | grep -w "inet 192" | awk '{print $2}' | tr "." "\t" | awk '{print $1,$2,$3}'| tr " " "."`
+
+ for i in `seq 1 254`
+    do
+     IND=`echo "$BASE.$i"`
+     ping -c 1 -W 0.1 $IND > /dev/null
+    
+     if [ $? -eq 0 ]
+      then
+          echo "$IND usato"
+          nmap -A $IND
+          whois $IND | grep -e Org -e Add | head -n 5 
+     else
+      echo "$IND" > /dev/null
+     fi
+    done
