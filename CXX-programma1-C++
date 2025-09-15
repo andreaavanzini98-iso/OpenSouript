@@ -1,0 +1,92 @@
+#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include "persone.h"
+#include <fstream>
+using namespace std;
+
+int main()
+{
+    //utenti
+    persona p_utente;
+    dipendente d_utente;
+    dirigente D_utente;
+
+    bool loop = true;
+    while(loop == true) {
+        system("clear");
+
+        cout << "|-----------------------BENVENUTO NELL'AGENZIA AVANZO-------------------------|\n" 
+            << "|             Da qui puoi tenere traccia dei tuoi dipendenti                  |\n"
+            << "|-----------------------------------------------------------------------------|\n"
+            << "|                                                                             |\n"
+            << "|                                  Digita:                                    |\n"
+            << "|                                                                             |\n"
+            << "|                     1- Per inserire un nuovo membro                         |\n"
+            << "|                     2- Per visualizzare i membri                            |\n"
+            << "|                     3- Per licenziare un membro                             |\n"
+            << "|                     <--press ^C per uscire-->                               |\n"
+            << "|                                                                             |\n"
+            << "|-----------------------------------------------------------------------------|\n";
+        
+        //SCELTA OPZIONE
+        
+        int choose1 = 0;
+        cout << "DIGITA QUI: ";
+        cin >> choose1;
+        
+        //OPZIONE 1
+        if(choose1==1){
+            bool repeat = true;
+            ofstream out("AvanzoTeam.txt");
+            while(repeat == true){
+                int choose2 = scelta("Che tipo di membro vuoi inserire","persona","dipendente","dirigente","Exit");
+                    if(choose2==1){
+                        cin >> p_utente;
+                        setnew(p_utente);
+                        savefile();
+                    }
+
+                    else if(choose2==2) {
+                        cin >> d_utente;
+                        setnew(d_utente);
+                        savefile();
+                    }
+
+                    else if(choose2==3) {
+                        cin >> D_utente;
+                        setnew(D_utente);
+                        savefile();
+                    }
+                
+                    else repeat = false;
+            }
+        }
+        if(choose1==2){
+            bool repeat = true;
+            while(repeat == true){
+                int choose = scelta("Accesso alla lista del personale","Cerca un utente specifico","Visualizza tutto il personale","Annulla");
+                if(choose==1) {
+                    /*for(;;)*/ search();
+                }
+
+                if(choose==2){
+                    system("cat Personale.txt");
+                }
+                if(choose==3)
+                        repeat=false;
+            }
+        }
+        if(choose1==3){
+            bool repeat = true;
+            while(repeat==true){
+                int choose = scelta("Accesso alla lista del personale","Rimmuovi un utente specifico","Rimuovi tutto il personale","Annulla");
+                if(choose==1) ; //da finire
+                if(choose==2) destroy();
+                if(choose==3) repeat=false;
+            }
+        }
+    }
+
+    return 0;
+}
