@@ -1,0 +1,104 @@
+#include <sys/socket.h>   
+#include <arpa/inet.h> 
+#include <unistd.h> 
+#include <iostream>
+#include <string>
+#include <string.h>
+
+#define SIZE 2000
+
+// Classe che descrive un client di rete. Si connette ad un server
+// attraverso un socket, invia un messaggio immesso da terminale, 
+// attende la risposta e la stampa a terminale 
+class client
+{
+  public:
+    // Costruttore
+    client(int c, std::string s)
+    {
+      m_port=c;
+      m_hostname=s;
+    }
+
+    // Configurazione del socket
+    bool configure()
+    {
+      // creazione del socket
+      m_sock = socket(AF_INET , SOCK_STREAM , 0);
+      if (m_sock == -1)
+        return false;
+   
+      // Connessione
+      m_server.sin_addr.s_addr = inet_addr(m_hostname.c_str());
+      m_server.sin_family      = AF_INET;
+      m_server.sin_port        = htons( m_port );
+      if (connect(m_sock , (struct sockaddr *)&m_server , sizeof(m_server)) < 0)
+        return false;
+
+      return true;
+    }
+
+    // Loop di lavoro: invio messaggio e ricezione della risposta
+    bool execute()
+    {
+      char server_reply[SIZE]; // Buffer per contenere la risposta del server  
+
+      // Loop di comunicazione con il server
+      while(1)
+      {
+        // Lettura input da terminale
+        std::string message;
+        std::cout << "Enter message (no spaces) : " << std::endl;
+        std::cin >> message;
+         
+        // Invio del messaggio, c_str() trasforma std::string in stringhe C
+        if( send(m_sock , message.c_str() , message.size() , 0) < 0)
+          return false;
+         
+        // Ricezione risposta nell'array server_reply
+        if( recv(m_sock , server_reply, SIZE , 0) < 0)
+          return false;
+        
+        // Stampa risposta
+        std::cout << "Server answer : " << server_reply << std::endl;
+
+        // Pulizia array, ignorare ;-)
+        memset(server_reply, 0, sizeof(server_reply));
+      }
+    
+      // Uscita
+      close(m_sock);
+      return true;
+    }
+
+  private:
+    int                m_sock;     // ID del socket
+    int                m_port;     // Porta a cui connettersi
+    std::string        m_hostname; // Computer a cui connettersi
+    struct sockaddr_in m_server;   // Struttura di controllo del socket
+};
+
+
+int main(int argc , char *argv[])
+{
+int a=atoi(argv[1]);
+std::string s=argv[2];
+  // Creazione oggetto client
+  client c(a, s);
+	std::cout << "Dichiara la porta a cui connettersi: " << std::endl;
+	std::cout << "Dichiara l'hostname tramite cui connettersi: " << std::endl;
+
+  // Configurazione del client
+  if( c.configure() )
+    std::cout << "Connected to the server " << std::endl;
+  else
+  {
+    std::cerr << "Connection error  " << std::endl;
+    return 1;
+  }  
+  
+  // Avvio del loop di comunicazione
+  c.execute();
+    
+  return 0;
+}
